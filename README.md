@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-# yt_summariser_agent
-=======
+
 # YouTube Channel Summarizer (CrewAI + Open Source)
 
 An intelligent multi-agent system using **CrewAI** and **open-source models** to summarize YouTube videos with three specialized agents:
