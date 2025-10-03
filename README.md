@@ -39,10 +39,14 @@ pip install -r requirements.txt
 
 ### 3. Configure Environment
 ```bash
-# Copy the example environment file
-copy .env.example .env
+# Create a .env file as below and place it in the root of the project
 
-# Edit .env to set your model preference (default is llama3:8b)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2:latest
+MODEL_TEMPERATURE=0.7
+MAX_TOKENS=4000
+
+
 ```
 
 ### 4. Run the Summarizer
@@ -74,8 +78,7 @@ The system works with any Ollama model. Recommended options:
 
 - **llama3:8b** - Best quality, slower processing
 - **llama3.2:3b** - Good quality, faster processing  
-- **mistral:7b** - Alternative high-quality option
-- **codellama:7b** - Good for technical content
+
 
 Change models by editing the `OLLAMA_MODEL` in your `.env` file.
 
