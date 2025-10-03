@@ -18,7 +18,7 @@ An intelligent multi-agent system using **CrewAI** and **open-source models** to
 ## 📋 Prerequisites
 
 1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai)
-2. **Python 3.8+**: Make sure Python is installed
+2. **Python 3.11+**: Make sure Python is installed
 
 ## 🛠️ Setup
 
