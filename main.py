@@ -5,9 +5,17 @@ import sys
 import os
 from pathlib import Path
 
-# Disable CrewAI telemetry early to prevent connection errors
+# Disable CrewAI telemetry and OpenTelemetry early to prevent connection errors
 os.environ["OTEL_SDK_DISABLED"] = "true"
 os.environ["CREWAI_TELEMETRY_OPT_OUT"] = "true"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = ""
+os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = ""
+os.environ["OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"] = "all"
+
+# Disable all OpenTelemetry tracing
+os.environ["OTEL_TRACES_EXPORTER"] = "none"
+os.environ["OTEL_METRICS_EXPORTER"] = "none"
+os.environ["OTEL_LOGS_EXPORTER"] = "none"
 
 # Add src to path
 src_path = Path(__file__).parent / "src"

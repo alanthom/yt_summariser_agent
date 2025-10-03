@@ -30,10 +30,10 @@ class YouTubeSummarizer:
         # Validate configuration
         Config.validate()
 
-        # Use local Ollama with codestral model
+        # Use local Ollama
         provider = "ollama"
         self.console.print(f"🚀 Using provider: [bold green]Ollama[/bold green] (Local processing)")
-        self.console.print(f"🤖 Model: [bold green]codestral:latest[/bold green]")
+        self.console.print(f"🤖 Model: [bold green]{Config.OLLAMA_MODEL}[/bold green]")
         
     def create_crew(self, transcript: str, metadata: dict):
         """Create the CrewAI crew with agents and tasks"""
@@ -101,7 +101,13 @@ class YouTubeSummarizer:
             task2 = progress.add_task("🚀 Creating AI crew...", total=None)
             
             try:
+                import time
+                start_time = time.time()
+                
                 crew = self.create_crew(transcript, metadata)
+                crew_creation_time = time.time() - start_time
+                print(f"⏱️ Crew creation took: {crew_creation_time:.2f} seconds")
+                
                 progress.update(task2, description="✅ Crew created, starting collaboration...")
                 
                 # Execute the crew with timeout for testing
@@ -116,11 +122,27 @@ class YouTubeSummarizer:
                 
                 result = None
                 exception = None
+                execution_start_time = time.time()
                 
                 def run_crew():
                     nonlocal result, exception
                     try:
-                        result = crew.kickoff()
+                        crew_result = crew.kickoff()
+                        # Try to get the content writer output specifically
+                        content_writer_output = None
+                        if hasattr(crew_result, 'tasks_outputs') and len(crew_result.tasks_outputs) >= 2:
+                            content_writer_output = str(crew_result.tasks_outputs[1])  # Second task is content writer
+                        elif hasattr(crew, 'tasks') and len(crew.tasks) >= 2:
+                            # Try to get the output from the second task
+                            content_writer_task = crew.tasks[1]
+                            if hasattr(content_writer_task, 'output'):
+                                content_writer_output = str(content_writer_task.output)
+                        
+                        # Combine content writer output with final result for better processing
+                        if content_writer_output:
+                            result = f"{content_writer_output}\n\n--- CRITIC EVALUATION ---\n{str(crew_result)}"
+                        else:
+                            result = crew_result
                     except Exception as e:
                         exception = e
                 
@@ -130,10 +152,13 @@ class YouTubeSummarizer:
                 crew_thread.start()
                 
                 # Wait for completion or timeout
-                crew_thread.join(timeout=180)  # Increase to 3 minutes for comprehensive processing
+                crew_thread.join(timeout=600)  # Increase to 10 minutes while we debug performance
+                
+                execution_time = time.time() - execution_start_time
+                print(f"⏱️ Crew execution took: {execution_time:.2f} seconds")
                 
                 if crew_thread.is_alive():
-                    raise Exception("Processing timed out after 180 seconds - stopping for testing")
+                    raise Exception(f"Processing timed out after 600 seconds - investigating performance issues (execution time: {execution_time:.2f}s)")
                 
                 if exception:
                     raise exception
@@ -154,7 +179,7 @@ class YouTubeSummarizer:
                 return None
             
             # Step 3: Process results
-            task3 = progress.add_task("� Processing results...", total=None)
+            task3 = progress.add_task("🔧 Processing results...", total=None)
             
             # Create crew output object
             crew_output = CrewOutput(raw_output=str(result))

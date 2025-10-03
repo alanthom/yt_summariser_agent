@@ -4,16 +4,21 @@ CrewAI Agents for YouTube Summarization with Multi-Provider Support
 from crewai import Agent
 from langchain_ollama import ChatOllama
 from src.config import Config
-from src.llm_wrapper import OllamaLLMWrapper
 import os
 
 # Set environment variables for litellm to properly handle Groq
 os.environ["GROQ_API_KEY"] = Config.GROQ_API_KEY or ""
-os.environ["LITELLM_LOG"] = "DEBUG"
 
-# Disable CrewAI telemetry to prevent connection errors
+# Comprehensive telemetry and tracing disable
 os.environ["OTEL_SDK_DISABLED"] = "true"
 os.environ["CREWAI_TELEMETRY_OPT_OUT"] = "true"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = ""
+os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = ""
+os.environ["OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"] = "all"
+os.environ["OTEL_TRACES_EXPORTER"] = "none"
+os.environ["OTEL_METRICS_EXPORTER"] = "none"
+os.environ["OTEL_LOGS_EXPORTER"] = "none"
+os.environ["LITELLM_LOG"] = "ERROR"  # Reduce litellm logging
 
 def create_llm(temperature: float = None):
     """Create the appropriate LLM instance based on configuration"""
@@ -55,14 +60,16 @@ def create_huggingface_llm(temperature: float):
 def create_ollama_llm(temperature: float):
     """Create Ollama LLM instance"""
     print(f"🔧 Creating Ollama LLM with temperature: {temperature}")
-    # Use ChatOllama with llama3.2 model and provider prefix for CrewAI/litellm
+    # Use ollama/ prefix as required by litellm/CrewAI
+    model_name = f"ollama/{Config.OLLAMA_MODEL}"
+    print(f"🤖 Using model: {model_name}")
     return ChatOllama(
-        model="ollama/llama3.2:latest",  # Provider prefix required for CrewAI
+        model=model_name,
         base_url=Config.OLLAMA_BASE_URL,
         temperature=temperature,
         max_retries=1,  # Allow 1 retry
-        timeout=60,  # Increase timeout to 60 seconds for comprehensive processing
-        num_predict=500  # Increase response length to 500 tokens for detailed analysis
+        timeout=15,  # Keep short timeout for faster failure detection
+        num_predict=100  # Keep short for speed
     )
 
 def create_listener_agent():
